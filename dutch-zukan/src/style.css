@@ -112,39 +112,45 @@ button {
   }
 }
 
-/* ホーム */
+/* ホーム：カテゴリが多いので3列にして、はみ出したら縦にスクロール */
+#home {
+  padding-left: 0;
+  padding-right: 0;
+}
 .cats {
+  width: 100%;
+  max-width: 560px;
+  max-height: 100%;
+  overflow-y: auto;
+  touch-action: pan-y;
+  padding: 76px 16px 24px;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 22px;
-  width: min(100%, 440px);
+  grid-template-columns: repeat(3, 1fr);
+  align-content: safe center;
+  gap: 14px;
 }
 .cat {
   aspect-ratio: 1;
-  border-radius: 32px;
+  border-radius: 26px;
   background: var(--c);
   color: #fff;
-  box-shadow: 0 8px 0 color-mix(in srgb, var(--c) 70%, #000);
+  box-shadow: 0 7px 0 color-mix(in srgb, var(--c) 70%, #000);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-}
-/* 数が奇数のとき、最後の1つは真ん中に */
-.cat:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
-  width: calc(50% - 11px);
-  justify-self: center;
+  gap: 2px;
+  padding: 0;
 }
 .cat .pic {
-  font-size: min(20vw, 96px);
+  font-size: min(13vw, 72px);
   line-height: 1.1;
 }
 .cat .name {
-  font-size: min(6vw, 28px);
+  font-size: min(4.6vw, 24px);
   font-weight: bold;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 .cat:active,
 .card:active {
@@ -237,9 +243,14 @@ button {
   border-radius: 50%;
   background: var(--c);
 }
+.shape {
+  width: 72%;
+  aspect-ratio: 1;
+}
 .card.boing .pic,
 .card.boing .swatch,
-.card.boing .num {
+.card.boing .num,
+.card.boing .shape {
   animation: boing 0.5s ease-out;
 }
 @keyframes boing {
@@ -286,6 +297,9 @@ button {
   line-height: 1;
 }
 .banner .swatch {
+  width: 64px;
+}
+.banner .shape {
   width: 64px;
 }
 .banner .num {

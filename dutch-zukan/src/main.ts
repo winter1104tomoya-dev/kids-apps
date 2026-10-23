@@ -1,5 +1,5 @@
 import './style.css';
-import { CATEGORIES, type Word } from './words';
+import { CATEGORIES, type Shape, type Word } from './words';
 import { dutchVoiceName, speakNl, unlockAudio } from './sound';
 import { saveSettings, settings } from './store';
 
@@ -48,7 +48,21 @@ function phrase(w: Word): string {
   return settings.article && w.art ? `${w.art} ${w.nl}` : w.nl;
 }
 
+// かたちカテゴリの図形（100×100 の枠に描く）
+const SHAPES: Record<Shape, string> = {
+  circle: '<circle cx="50" cy="50" r="42"/>',
+  square: '<rect x="12" y="12" width="76" height="76" rx="6"/>',
+  triangle: '<path d="M50 10 92 86H8z" stroke-linejoin="round"/>',
+  heart: '<path d="M50 88C20 66 6 50 6 32 6 18 17 8 30 8c9 0 16 5 20 12 4-7 11-12 20-12 13 0 24 10 24 24 0 18-14 34-44 56z"/>',
+  star: '<path d="M50 6l12.9 27.6 30.2 3.6-22.3 20.7 5.9 29.9L50 72.9 23.3 87.8l5.9-29.9L6.9 37.2l30.2-3.6z"/>',
+  rectangle: '<rect x="4" y="26" width="92" height="48" rx="6"/>',
+  diamond: '<path d="M50 4 86 50 50 96 14 50z"/>',
+};
+
 function picHtml(w: Word): string {
+  if (w.shape) {
+    return `<svg class="shape" viewBox="0 0 100 100" fill="${w.color}">${SHAPES[w.shape]}</svg>`;
+  }
   if (w.num) {
     // 数字の下に同じ数の丸を並べて、量も一緒に見せる
     const dots = '<i></i>'.repeat(w.num);
