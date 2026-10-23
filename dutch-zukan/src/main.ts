@@ -9,6 +9,15 @@ interface NavState {
   cat?: number;
 }
 
+// リアル寄りの絵（Microsoft Fluent Emoji の 3D、MIT ライセンス）。ビルド時にファイルとして書き出される
+const IMAGES = import.meta.glob<string>('./img/*.png', { eager: true, query: '?url', import: 'default' });
+
+/** 絵があれば <img>、なければ絵文字 */
+function icon(item: { pic: string; img?: string }, cls = 'pic'): string {
+  const src = item.img && IMAGES[`./img/${item.img}.png`];
+  return src ? `<img class="${cls} img" src="${src}" alt="" draggable="false">` : `<span class="${cls}">${item.pic}</span>`;
+}
+
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector(sel) as T;
 
 let nav: NavState = { screen: 'home' };
@@ -33,7 +42,7 @@ CATEGORIES.forEach((c, i) => {
   const b = document.createElement('button');
   b.className = 'cat';
   b.style.setProperty('--c', c.color);
-  b.innerHTML = `<span class="pic">${c.pic}</span><span class="name">${c.ja}</span>`;
+  b.innerHTML = `${icon(c)}<span class="name">${c.ja}</span>`;
   b.addEventListener('click', () => {
     speakNl(c.nl, c.ja);
     show({ screen: 'book', cat: i });
@@ -70,12 +79,12 @@ function picHtml(w: Word): string {
   }
   return w.color
     ? `<span class="swatch" style="--sw:${w.color}"></span>`
-    : `<span class="pic">${w.pic}</span>`;
+    : icon(w);
 }
 
 function renderBook(cat: number): void {
   const c = CATEGORIES[cat];
-  $('#title').innerHTML = `<span>${c.pic}</span> ${c.ja}`;
+  $('#title').innerHTML = `${icon(c, 'head')} ${c.ja}`;
   $('#title').style.setProperty('--c', c.color);
   $('#banner').hidden = true;
   const box = $('#cards');

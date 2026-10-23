@@ -173,6 +173,10 @@ button {
   font-weight: bold;
   color: var(--c);
 }
+.title img.head {
+  width: 48px;
+  margin-right: 8px;
+}
 .title span {
   font-size: 44px;
   margin-right: 8px;
@@ -207,6 +211,19 @@ button {
 .card .pic {
   font-size: min(17vw, 110px);
   line-height: 1;
+}
+/* 絵（画像）の大きさは、絵文字と同じくらいにそろえる */
+.cat img.pic {
+  width: min(15vw, 84px);
+}
+.card img.pic {
+  width: 86%;
+}
+.banner img.pic {
+  width: 72px;
+}
+img.pic {
+  pointer-events: none;
 }
 .swatch {
   width: 70%;

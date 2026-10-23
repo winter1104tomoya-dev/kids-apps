@@ -5,6 +5,8 @@ export type Shape = 'circle' | 'square' | 'triangle' | 'heart' | 'star' | 'recta
 
 export interface Word {
   pic: string;
+  /** src/img にある絵の名前（拡張子なし）。あれば絵文字の代わりに使う */
+  img?: string;
   nl: string;
   art?: 'de' | 'het';
   ja: string;
@@ -19,6 +21,7 @@ export interface Word {
 export interface Category {
   id: string;
   pic: string;
+  img?: string;
   nl: string;
   ja: string;
   color: string;
@@ -29,22 +32,23 @@ export const CATEGORIES: Category[] = [
   {
     id: 'fruit',
     pic: '🍓',
+    img: 'strawberry',
     nl: 'Fruit',
     ja: 'くだもの',
     color: '#ff8a80',
     words: [
-      { pic: '🍓', nl: 'aardbei', art: 'de', ja: 'いちご' },
-      { pic: '🍎', nl: 'appel', art: 'de', ja: 'りんご' },
-      { pic: '🍌', nl: 'banaan', art: 'de', ja: 'バナナ' },
-      { pic: '🍇', nl: 'druiven', art: 'de', ja: 'ぶどう' },
-      { pic: '🍊', nl: 'sinaasappel', art: 'de', ja: 'みかん' },
-      { pic: '🍉', nl: 'watermeloen', art: 'de', ja: 'すいか' },
-      { pic: '🍑', nl: 'perzik', art: 'de', ja: 'もも' },
-      { pic: '🍒', nl: 'kersen', art: 'de', ja: 'さくらんぼ' },
-      { pic: '🍍', nl: 'ananas', art: 'de', ja: 'パイナップル' },
-      { pic: '🍋', nl: 'citroen', art: 'de', ja: 'レモン' },
-      { pic: '🍐', nl: 'peer', art: 'de', ja: 'なし' },
-      { pic: '🥝', nl: 'kiwi', art: 'de', ja: 'キウイ' },
+      { pic: '🍓', img: 'strawberry', nl: 'aardbei', art: 'de', ja: 'いちご' },
+      { pic: '🍎', img: 'red_apple', nl: 'appel', art: 'de', ja: 'りんご' },
+      { pic: '🍌', img: 'banana', nl: 'banaan', art: 'de', ja: 'バナナ' },
+      { pic: '🍇', img: 'grapes', nl: 'druiven', art: 'de', ja: 'ぶどう' },
+      { pic: '🍊', img: 'tangerine', nl: 'sinaasappel', art: 'de', ja: 'みかん' },
+      { pic: '🍉', img: 'watermelon', nl: 'watermeloen', art: 'de', ja: 'すいか' },
+      { pic: '🍑', img: 'peach', nl: 'perzik', art: 'de', ja: 'もも' },
+      { pic: '🍒', img: 'cherries', nl: 'kersen', art: 'de', ja: 'さくらんぼ' },
+      { pic: '🍍', img: 'pineapple', nl: 'ananas', art: 'de', ja: 'パイナップル' },
+      { pic: '🍋', img: 'lemon', nl: 'citroen', art: 'de', ja: 'レモン' },
+      { pic: '🍐', img: 'pear', nl: 'peer', art: 'de', ja: 'なし' },
+      { pic: '🥝', img: 'kiwi_fruit', nl: 'kiwi', art: 'de', ja: 'キウイ' },
     ],
   },
   {
