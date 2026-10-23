@@ -1,4 +1,7 @@
 import hiraganaData from './data/hiragana.json';
+import alphabetData from './data/alphabet.json';
+import lowercaseData from './data/lowercase.json';
+import numbersData from './data/numbers.json';
 
 export type Pt = [number, number];
 
@@ -12,46 +15,28 @@ export interface CharData {
   color: string;
 }
 
-export type SetId = 'hiragana' | 'alphabet';
+export type SetId = 'hiragana' | 'alphabet' | 'numbers';
 
-// ひらがなは行ごとに色分けする
-const ROW_COLORS: Record<string, string> = {
-  あ: '#ff8a80', か: '#ffb74d', さ: '#81c784', た: '#64b5f6', な: '#ba68c8',
-};
-const ROW_OF: Record<string, string> = {
-  あ: 'あ', い: 'あ', う: 'あ', え: 'あ', お: 'あ',
-  か: 'か', き: 'か', く: 'か', け: 'か', こ: 'か',
-  さ: 'さ', し: 'さ', す: 'さ', せ: 'さ', そ: 'さ',
-  た: 'た', ち: 'た', つ: 'た', て: 'た', と: 'た',
-};
+type RawChar = { char: string; strokes: Pt[][] };
 
-// 大文字は直線と円弧だけなので手で定義する（日本の小学校英語の書き順）
-function line(x1: number, y1: number, x2: number, y2: number): Pt[] {
-  return [[x1, y1], [x2, y2]];
-}
+const COLORS = ['#ff8a80', '#ffb74d', '#81c784', '#64b5f6', '#ba68c8'];
 
-/** 上から反時計回りに一周する楕円 */
-function ellipse(cx: number, cy: number, rx: number, ry: number): Pt[] {
-  const pts: Pt[] = [];
-  for (let i = 0; i <= 64; i++) {
-    const a = -Math.PI / 2 - (i / 64) * Math.PI * 2;
-    pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
-  }
-  return pts;
-}
-
-const ALPHABET: { char: string; reading: string; strokes: Pt[][] }[] = [
-  { char: 'L', reading: 'エル', strokes: [[[32, 12], [32, 88], [72, 88]]] },
-  { char: 'T', reading: 'ティー', strokes: [line(18, 14, 82, 14), line(50, 14, 50, 88)] },
-  { char: 'I', reading: 'アイ', strokes: [line(50, 12, 50, 88)] },
-  { char: 'O', reading: 'オー', strokes: [ellipse(50, 50, 32, 38)] },
-  {
-    char: 'A',
-    reading: 'エー',
-    strokes: [line(50, 12, 20, 88), line(50, 12, 80, 88), line(32, 60, 68, 60)],
-  },
+// ひらがなは五十音表の行ごとに色分けする
+const GOJUON = [
+  'あいうえお', 'かきくけこ', 'さしすせそ', 'たちつてと', 'なにぬねの',
+  'はひふへほ', 'まみむめも', 'や ゆ よ', 'らりるれろ', 'わ   を', 'ん    ',
 ];
-const ALPHA_COLORS = ['#ff8a80', '#ffb74d', '#81c784', '#64b5f6', '#ba68c8'];
+const HIRAGANA_COLORS = [...COLORS, '#4db6ac', '#f06292', '#ffd54f', '#7986cb', '#a1887f', '#90a4ae'];
+function hiraganaColor(ch: string): string {
+  const row = GOJUON.findIndex((r) => r.includes(ch));
+  return HIRAGANA_COLORS[row % HIRAGANA_COLORS.length];
+}
+
+const ALPHABET_READINGS = [
+  'エー', 'ビー', 'シー', 'ディー', 'イー', 'エフ', 'ジー', 'エイチ', 'アイ', 'ジェー', 'ケー', 'エル', 'エム',
+  'エヌ', 'オー', 'ピー', 'キュー', 'アール', 'エス', 'ティー', 'ユー', 'ブイ', 'ダブリュー', 'エックス', 'ワイ', 'ゼット',
+];
+const NUMBER_READINGS = ['ぜろ', 'いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう'];
 
 /** 文字の外接枠をマスの中央に寄せ、大きい方の辺が SIZE になるよう拡大する */
 function normalize(strokes: Pt[][]): Pt[][] {
@@ -67,16 +52,35 @@ function normalize(strokes: Pt[][]): Pt[][] {
   return strokes.map((st) => st.map(([x, y]) => [x * s + ox, y * s + oy] as Pt));
 }
 
-export const SETS: Record<SetId, CharData[]> = {
-  hiragana: (hiraganaData as { char: string; strokes: Pt[][] }[]).map((c) => ({
+function build(data: RawChar[], reading: (c: RawChar, i: number) => string, color: (c: RawChar, i: number) => string): CharData[] {
+  return data.map((c, i) => ({
     char: c.char,
-    reading: c.char,
+    reading: reading(c, i),
     strokes: normalize(c.strokes),
-    color: ROW_COLORS[ROW_OF[c.char] ?? 'あ'],
-  })),
-  alphabet: ALPHABET.map((c, i) => ({
-    ...c,
-    strokes: normalize(c.strokes),
-    color: ALPHA_COLORS[i % ALPHA_COLORS.length],
-  })),
-};
+    color: color(c, i),
+  }));
+}
+
+const hiragana = build(hiraganaData as RawChar[], (c) => c.char, (c) => hiraganaColor(c.char));
+const upper = build(alphabetData as RawChar[], (_, i) => ALPHABET_READINGS[i], (_, i) => COLORS[i % COLORS.length]);
+const lower = build(lowercaseData as RawChar[], (_, i) => ALPHABET_READINGS[i], (_, i) => COLORS[i % COLORS.length]);
+// 数字は 1〜9、0 の順に並べる
+const numbers = build(numbersData as RawChar[], (_, i) => NUMBER_READINGS[i], (_, i) => COLORS[i % COLORS.length]);
+numbers.push(numbers.shift()!);
+
+/** 文字えらびに並べる文字。lowercase が true ならアルファベットに小文字も加える */
+export function charList(set: SetId, lowercase: boolean): CharData[] {
+  if (set === 'hiragana') return hiragana;
+  if (set === 'numbers') return numbers;
+  return lowercase ? [...upper, ...lower] : upper;
+}
+
+/**
+ * 文字えらびの並び。ひらがなは五十音表の形にし、空きマスは null。
+ * columns は1行に並べる数
+ */
+export function tileLayout(set: SetId, lowercase: boolean): { columns: number; cells: (CharData | null)[] } {
+  if (set !== 'hiragana') return { columns: set === 'numbers' ? 3 : 4, cells: charList(set, lowercase) };
+  const cells = GOJUON.flatMap((row) => [...row].map((ch) => hiragana.find((c) => c.char === ch) ?? null));
+  return { columns: 5, cells };
+}

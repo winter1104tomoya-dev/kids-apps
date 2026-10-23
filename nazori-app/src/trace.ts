@@ -150,7 +150,8 @@ export class Tracer {
     const mean = this.dists.reduce((a, b) => a + b, 0) / Math.max(1, this.dists.length);
     const moved = this.trail ? trailLength(this.trail.pts) : 0;
 
-    if (ratio >= lv.pass && mean <= lv.tol) {
+    // 点のような短い画は、始点に触れれば合格
+    if ((ratio >= lv.pass && mean <= lv.tol) || path.length < 12) {
       this.passStroke();
       return;
     }

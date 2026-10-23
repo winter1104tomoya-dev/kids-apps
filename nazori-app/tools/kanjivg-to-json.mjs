@@ -1,13 +1,19 @@
-// KanjiVG のひらがなSVGを、アプリ用の文字データ（100×100マス、画ごとの点の列）に変換する。
-// 使い方: node tools/kanjivg-to-json.mjs し つ く い こ
-// 出力先: src/data/hiragana.json
+// KanjiVG のSVGを、アプリ用の文字データ（100×100マス、画ごとの点の列）に変換する。
+// 使い方: node tools/kanjivg-to-json.mjs        （全セットを作り直す）
+//         node tools/kanjivg-to-json.mjs numbers（1セットだけ）
+// 出力先: src/data/<セット名>.json
 // KanjiVG © Ulrich Apel, CC BY-SA 3.0 (https://kanjivg.tagaini.net/)
 
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const chars = process.argv.slice(2);
-if (chars.length === 0) chars.push('し', 'つ', 'く', 'い', 'こ');
+const SETS = {
+  hiragana: [...'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん'],
+  alphabet: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+  lowercase: [...'abcdefghijklmnopqrstuvwxyz'],
+  numbers: [...'0123456789'],
+};
+const targets = process.argv.length > 2 ? process.argv.slice(2) : Object.keys(SETS);
 
 const SRC = 'https://raw.githubusercontent.com/KanjiVG/kanjivg/master/kanji/';
 const SCALE = 100 / 109; // KanjiVG は 109×109
@@ -55,6 +61,16 @@ function pathToDense(d) {
         pts.push(cur);
         lastCtrl = null;
         break;
+      case 'H':
+        cur = [rel ? cur[0] + num() : num(), cur[1]];
+        pts.push(cur);
+        lastCtrl = null;
+        break;
+      case 'V':
+        cur = [cur[0], rel ? cur[1] + num() : num()];
+        pts.push(cur);
+        lastCtrl = null;
+        break;
       case 'C': {
         const c1 = off(num(), num());
         const c2 = off(num(), num());
@@ -94,17 +110,19 @@ function resample(dense) {
   return out.map(([x, y]) => [Math.round(x * SCALE * 10) / 10, Math.round(y * SCALE * 10) / 10]);
 }
 
-const result = [];
-for (const ch of chars) {
+async function convert(ch) {
   const code = ch.codePointAt(0).toString(16).padStart(5, '0');
   const res = await fetch(`${SRC}${code}.svg`);
   if (!res.ok) throw new Error(`${ch} のデータを取得できませんでした (${res.status})`);
   const svg = await res.text();
   const ds = [...svg.matchAll(/<path id="kvg:[0-9a-f]+-s\d+" d="([^"]+)"/g)].map((m) => m[1]);
-  result.push({ char: ch, strokes: ds.map((d) => resample(pathToDense(d))) });
-  console.log(`${ch}: ${ds.length}画`);
+  return { char: ch, strokes: ds.map((d) => resample(pathToDense(d))) };
 }
 
-const out = fileURLToPath(new URL('../src/data/hiragana.json', import.meta.url));
-writeFileSync(out, JSON.stringify(result) + '\n');
-console.log(`書き出し: ${out}`);
+for (const name of targets) {
+  const result = [];
+  for (const ch of SETS[name]) result.push(await convert(ch));
+  const out = fileURLToPath(new URL(`../src/data/${name}.json`, import.meta.url));
+  writeFileSync(out, JSON.stringify(result) + '\n');
+  console.log(`${name}: ${result.map((c) => `${c.char}${c.strokes.length}`).join(' ')}`);
+}
