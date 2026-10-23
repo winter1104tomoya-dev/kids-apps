@@ -10,11 +10,11 @@ interface NavState {
 }
 
 // リアル寄りの絵（Microsoft Fluent Emoji の 3D、MIT ライセンス）。ビルド時にファイルとして書き出される
-const IMAGES = import.meta.glob<string>('./img/*.png', { eager: true, query: '?url', import: 'default' });
+const IMAGES = import.meta.glob<string>('./img/*.webp', { eager: true, query: '?url', import: 'default' });
 
 /** 絵があれば <img>、なければ絵文字 */
 function icon(item: { pic: string; img?: string }, cls = 'pic'): string {
-  const src = item.img && IMAGES[`./img/${item.img}.png`];
+  const src = item.img && IMAGES[`./img/${item.img}.webp`];
   return src ? `<img class="${cls} img" src="${src}" alt="" draggable="false">` : `<span class="${cls}">${item.pic}</span>`;
 }
 
