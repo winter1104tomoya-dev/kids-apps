@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#fff3e0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <title>ハンバーガーやさん</title>
+  </head>
+  <body>
+    <!-- ホーム：おみせを あける -->
+    <section id="home" class="screen">
+      <button id="gear" class="corner right" aria-label="保護者メニュー（3秒長押し）">
+        <svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+        <span class="ring"></span>
+      </button>
+      <div class="awning"></div>
+      <div id="logo" class="logo"></div>
+      <button id="open" class="open" aria-label="はじめる">
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+      </button>
+    </section>
+
+    <!-- おみせ：注文をきいて、ハンバーガーをつくる -->
+    <section id="shop" class="screen" hidden>
+      <button class="corner left back" aria-label="もどる">
+        <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" /></svg>
+      </button>
+      <div id="coins" class="coins"><span class="coin"></span><b>0</b></div>
+
+      <div class="counter">
+        <button id="customer" class="customer" aria-label="もういちど きく"></button>
+        <button id="order" class="bubble" aria-label="ちゅうもん"></button>
+      </div>
+
+      <div id="kitchen" class="kitchen">
+        <div id="stack" class="stack"></div>
+        <div id="glass" class="glass"></div>
+      </div>
+
+      <div id="tray" class="tray">
+        <div id="toppings" class="toppings"></div>
+        <button id="done" class="done" aria-label="できた"></button>
+      </div>
+      <div id="drinks" class="tray drinks" hidden></div>
+    </section>
+
+    <!-- 保護者メニュー -->
+    <div id="parent" class="parent" hidden>
+      <div class="panel">
+        <h2>保護者メニュー</h2>
+        <div class="row">
+          <span>音量</span>
+          <div class="seg" data-key="volume">
+            <button data-v="0">なし</button><button data-v="1">小さめ</button><button data-v="2">ふつう</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>むずかしさ</span>
+          <div class="seg" data-key="level">
+            <button data-v="easy">かんたん</button><button data-v="normal">ふつう</button><button data-v="hard">むずかしい</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>ジュースの注文</span>
+          <div class="seg" data-key="drink">
+            <button data-v="false">なし</button><button data-v="true">あり</button>
+          </div>
+        </div>
+        <p class="note">
+          かんたん：具1種類（1〜2まい）／ふつう：具2種類／むずかしい：具2〜3種類（3まいまで）。<br />
+          集めたコイン：<b id="coinTotal">0</b>まい
+          <button id="reset" class="plain small">0にもどす</button>
+        </p>
+        <button id="close" class="plain wide">とじる</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

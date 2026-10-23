@@ -1,4 +1,4 @@
-# main に変更が入るたびに、2つのアプリをビルドして GitHub Pages に公開する
+# main に変更が入るたびに、3つのアプリをビルドして GitHub Pages に公開する
 name: deploy
 
 on:
@@ -25,13 +25,14 @@ jobs:
           node-version: 22
       - name: Build
         run: |
-          for app in nazori-app dutch-zukan; do
+          for app in nazori-app dutch-zukan burger-shop; do
             (cd $app && npm ci && npm run build)
           done
           mkdir _site
           cp site/index.html _site/
           cp -r nazori-app/dist _site/nazori
           cp -r dutch-zukan/dist _site/zukan
+          cp -r burger-shop/dist _site/burger
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
