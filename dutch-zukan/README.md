@@ -71,6 +71,6 @@
 
 ## 補足
 
-- くだものの絵は [Fluent Emoji](https://github.com/microsoft/fluentui-emoji)（© Microsoft、MIT ライセンス）の 3D 画像を使っています（`src/img`）。ほかのカテゴリは絵文字なので、スマホの機種によって少し見た目が変わります。
+- 絵は [Fluent Emoji](https://github.com/microsoft/fluentui-emoji)（© Microsoft、MIT ライセンス）の 3D 画像を使っています（`src/img`、WebP に変換）。いろ・かず・かたちは、アプリの中で描いています。
 - `dist` フォルダには組み立て済みのファイルが入っています（`npm run build` で作り直せます）。
 - 設定はスマホのブラウザ内に保存されます。アカウントは不要です。
