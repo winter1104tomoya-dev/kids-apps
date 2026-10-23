@@ -48,7 +48,7 @@ document.querySelectorAll('.back').forEach((b) => b.addEventListener('click', ()
 document.querySelectorAll<HTMLButtonElement>('.big-set').forEach((b) =>
   b.addEventListener('click', () => {
     const set = b.dataset.set as SetId;
-    speak({ hiragana: 'ひらがな', alphabet: 'エービーシー', numbers: 'すうじ' }[set]);
+    speak({ hiragana: 'ひらがな', katakana: 'かたかな', alphabet: 'エービーシー', numbers: 'すうじ' }[set]);
     show({ screen: 'select', set });
   }),
 );
