@@ -116,15 +116,15 @@ button {
 .home-buttons {
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 28px;
 }
 .big-set {
-  width: min(62vw, 34vh);
+  width: min(56vw, 25vh);
   aspect-ratio: 1;
-  border-radius: 40px;
+  border-radius: 36px;
   background: var(--c);
   color: #fff;
-  font-size: min(36vw, 20vh);
+  font-size: min(32vw, 15vh);
   font-weight: bold;
   line-height: 1;
   box-shadow: 0 10px 0 color-mix(in srgb, var(--c) 70%, #000);
@@ -137,32 +137,45 @@ button {
   box-shadow: none;
 }
 
-/* 文字えらび */
+/* 文字えらび（文字が多いので縦にスクロールできる） */
+#select {
+  justify-content: flex-start;
+}
 .tiles {
+  --cols: 4;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  width: min(100%, 420px);
-  margin-top: 96px;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  align-content: start;
+  gap: 12px;
+  width: min(100%, 560px);
+  flex: 1;
+  margin-top: 104px;
+  padding: 12px 12px 32px;
+  overflow-y: auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+.tiles[data-set='hiragana'] {
+  gap: 8px;
 }
 .tile {
   position: relative;
   aspect-ratio: 1;
-  border-radius: 28px;
+  border-radius: 20px;
   background: var(--card);
-  border: 6px solid var(--c);
-  box-shadow: 0 8px 0 var(--c);
-  font-size: min(22vw, 120px);
+  border: 5px solid var(--c);
+  box-shadow: 0 6px 0 var(--c);
+  font-size: calc(min(100vw, 560px) / var(--cols) * 0.5);
   font-weight: bold;
   line-height: 1;
   color: var(--ink);
 }
 .tile .sticker {
   position: absolute;
-  top: -12px;
-  right: -12px;
-  width: 52px;
-  height: 52px;
+  top: -10px;
+  right: -10px;
+  width: 36px;
+  height: 36px;
   animation: pop 0.4s ease-out;
 }
 @keyframes pop {

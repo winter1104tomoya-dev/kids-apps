@@ -19,6 +19,7 @@
       <div class="home-buttons">
         <button class="big-set" data-set="hiragana" style="--c:#ff8a80">あ</button>
         <button class="big-set" data-set="alphabet" style="--c:#64b5f6">A</button>
+        <button class="big-set" data-set="numbers" style="--c:#81c784">1</button>
       </div>
     </section>
 
@@ -63,11 +64,17 @@
           </div>
         </div>
         <div class="row">
+          <span>アルファベットの小文字</span>
+          <div class="seg" data-key="lowercase">
+            <button data-v="false">出さない</button><button data-v="true">出す</button>
+          </div>
+        </div>
+        <div class="row">
           <span>シール</span>
           <button id="reset" class="plain">リセット</button>
         </div>
         <p class="credit">
-          ひらがなの書き順データ：<a href="https://kanjivg.tagaini.net/" target="_blank" rel="noopener">KanjiVG</a>
+          書き順データ：<a href="https://kanjivg.tagaini.net/" target="_blank" rel="noopener">KanjiVG</a>
           © Ulrich Apel（<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>）を加工して使用
         </p>
         <button id="close" class="plain wide">とじる</button>

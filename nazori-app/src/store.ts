@@ -6,6 +6,8 @@ export interface Settings {
   /** 0: 音なし 1: 小さめ 2: ふつう */
   volume: 0 | 1 | 2;
   level: Level;
+  /** アルファベットに小文字も並べる */
+  lowercase: boolean;
 }
 
 /** 判定のゆるさ。tol は始点・ずれの許容（マス単位）、pass は合格に必要な進み具合 */
@@ -35,7 +37,7 @@ function save(key: string, value: unknown): void {
   }
 }
 
-export const settings: Settings = load<Settings>(KEY_SETTINGS, { volume: 2, level: 'easy' });
+export const settings: Settings = load<Settings>(KEY_SETTINGS, { volume: 2, level: 'easy', lowercase: false });
 export function saveSettings(): void {
   save(KEY_SETTINGS, settings);
 }

@@ -1,5 +1,5 @@
 import './style.css';
-import { SETS, type SetId } from './chars';
+import { charList, tileLayout, type CharData, type SetId } from './chars';
 import { speak, unlockAudio } from './sound';
 import { addSticker, resetStickers, saveSettings, settings, stickerCount } from './store';
 import { Tracer } from './trace';
@@ -17,12 +17,15 @@ const STICKER_SVG =
   '<svg class="sticker" viewBox="0 0 24 24"><path d="M12 1.8l3.1 6.4 7 .9-5.1 4.9 1.3 7-6.3-3.4-6.3 3.4 1.3-7L1.9 9.1l7-.9z" fill="#ffd54f" stroke="#f9a825" stroke-width="1.2" stroke-linejoin="round"/></svg>';
 
 const tracer = new Tracer($<HTMLCanvasElement>('#board'), () => {
-  addSticker(SETS[nav.set!][nav.index!].char);
+  addSticker(currentChar().char);
   speak('よくできました');
   $('#finish').hidden = false;
 });
 
 let nav: NavState = { screen: 'home' };
+
+const list = (set: SetId): CharData[] => charList(set, settings.lowercase);
+const currentChar = (): CharData => list(nav.set!)[nav.index!];
 
 // ---- 画面の切り替え（Android の戻るボタンでも1つ前の画面に戻る） ----
 
@@ -45,7 +48,7 @@ document.querySelectorAll('.back').forEach((b) => b.addEventListener('click', ()
 document.querySelectorAll<HTMLButtonElement>('.big-set').forEach((b) =>
   b.addEventListener('click', () => {
     const set = b.dataset.set as SetId;
-    speak(set === 'hiragana' ? 'ひらがな' : 'エービーシー');
+    speak({ hiragana: 'ひらがな', alphabet: 'エービーシー', numbers: 'すうじ' }[set]);
     show({ screen: 'select', set });
   }),
 );
@@ -55,7 +58,16 @@ document.querySelectorAll<HTMLButtonElement>('.big-set').forEach((b) =>
 function renderTiles(set: SetId): void {
   const box = $('#tiles');
   box.innerHTML = '';
-  SETS[set].forEach((c, i) => {
+  const { columns, cells } = tileLayout(set, settings.lowercase);
+  box.style.setProperty('--cols', String(columns));
+  box.dataset.set = set;
+  box.scrollTop = 0;
+  cells.forEach((c) => {
+    if (!c) {
+      box.append(document.createElement('span'));
+      return;
+    }
+    const i = list(set).indexOf(c);
     const tile = document.createElement('button');
     tile.className = 'tile';
     tile.style.setProperty('--c', c.color);
@@ -73,18 +85,18 @@ function renderTiles(set: SetId): void {
 
 function startTrace(set: SetId, index: number): void {
   $('#finish').hidden = true;
-  tracer.start(SETS[set][index]);
+  tracer.start(list(set)[index]);
 }
 
 $('#again').addEventListener('click', () => {
-  speak(SETS[nav.set!][nav.index!].reading);
+  speak(currentChar().reading);
   startTrace(nav.set!, nav.index!);
 });
 
 $('#next').addEventListener('click', () => {
-  const list = SETS[nav.set!];
-  const index = (nav.index! + 1) % list.length;
-  speak(list[index].reading);
+  const chars = list(nav.set!);
+  const index = (nav.index! + 1) % chars.length;
+  speak(chars[index].reading);
   // 「つぎのもじ」は履歴を積まず、戻ると文字えらびに帰れるようにする
   nav = { screen: 'trace', set: nav.set, index };
   history.replaceState(nav, '');
@@ -111,7 +123,7 @@ gear.addEventListener('pointerdown', (e) => {
 
 function syncSeg(): void {
   document.querySelectorAll<HTMLElement>('.seg').forEach((seg) => {
-    const key = seg.dataset.key as 'volume' | 'level';
+    const key = seg.dataset.key as 'volume' | 'level' | 'lowercase';
     seg.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
       b.classList.toggle('on', String(settings[key]) === b.dataset.v);
     });
@@ -128,6 +140,7 @@ document.querySelectorAll<HTMLElement>('.seg').forEach((seg) =>
     const b = (e.target as HTMLElement).closest('button');
     if (!b) return;
     if (seg.dataset.key === 'volume') settings.volume = Number(b.dataset.v) as 0 | 1 | 2;
+    else if (seg.dataset.key === 'lowercase') settings.lowercase = b.dataset.v === 'true';
     else settings.level = b.dataset.v as typeof settings.level;
     saveSettings();
     syncSeg();
@@ -161,7 +174,7 @@ document.addEventListener('contextmenu', (e) => e.preventDefault());
 document.addEventListener('dblclick', (e) => e.preventDefault());
 
 // 開発中だけ、自動テスト用に文字データを見えるようにする
-if (import.meta.env.DEV) (window as unknown as { __sets: typeof SETS }).__sets = SETS;
+if (import.meta.env.DEV) (window as unknown as { __list: typeof list }).__list = list;
 
 // 公開版では service worker を登録して、オフラインでも開けるようにする
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
