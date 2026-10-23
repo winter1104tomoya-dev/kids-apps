@@ -8,6 +8,8 @@ export interface Word {
   ja: string;
   /** 色カテゴリ用：絵文字の代わりに塗る色 */
   color?: string;
+  /** 数字カテゴリ用：絵文字の代わりに数字と同じ数の丸を出す */
+  num?: number;
 }
 
 export interface Category {
@@ -125,6 +127,25 @@ export const CATEGORIES: Category[] = [
       { pic: '', nl: 'bruin', ja: 'ちゃいろ', color: '#795548' },
       { pic: '', nl: 'wit', ja: 'しろ', color: '#ffffff' },
       { pic: '', nl: 'zwart', ja: 'くろ', color: '#212121' },
+    ],
+  },
+  {
+    id: 'getallen',
+    pic: '🔢',
+    nl: 'Getallen',
+    ja: 'かず',
+    color: '#4db6ac',
+    words: [
+      { pic: '', nl: 'één', ja: 'いち', num: 1 },
+      { pic: '', nl: 'twee', ja: 'に', num: 2 },
+      { pic: '', nl: 'drie', ja: 'さん', num: 3 },
+      { pic: '', nl: 'vier', ja: 'よん', num: 4 },
+      { pic: '', nl: 'vijf', ja: 'ご', num: 5 },
+      { pic: '', nl: 'zes', ja: 'ろく', num: 6 },
+      { pic: '', nl: 'zeven', ja: 'なな', num: 7 },
+      { pic: '', nl: 'acht', ja: 'はち', num: 8 },
+      { pic: '', nl: 'negen', ja: 'きゅう', num: 9 },
+      { pic: '', nl: 'tien', ja: 'じゅう', num: 10 },
     ],
   },
 ];

@@ -131,7 +131,7 @@ button {
   justify-content: center;
   gap: 4px;
 }
-/* 5つ目は真ん中に */
+/* 数が奇数のとき、最後の1つは真ん中に */
 .cat:last-child:nth-child(odd) {
   grid-column: 1 / -1;
   width: calc(50% - 11px);
@@ -209,8 +209,37 @@ button {
   background: var(--sw);
   box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.12);
 }
+/* 数字：大きな数字と、その数だけの丸 */
+.num {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--c);
+}
+.num b {
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Nunito', system-ui, sans-serif;
+  font-size: min(12vw, 72px);
+  line-height: 1;
+}
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  /* 丸は1列に5つまで */
+  --d: min(3.4vw, 18px);
+  width: calc(var(--d) * 5 + 14px);
+}
+.dots i {
+  width: var(--d);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--c);
+}
 .card.boing .pic,
-.card.boing .swatch {
+.card.boing .swatch,
+.card.boing .num {
   animation: boing 0.5s ease-out;
 }
 @keyframes boing {
@@ -258,6 +287,12 @@ button {
 }
 .banner .swatch {
   width: 64px;
+}
+.banner .num {
+  --c: #4db6ac;
+}
+.banner .num b {
+  font-size: 56px;
 }
 .banner .word {
   font-family: 'Comic Sans MS', 'Chalkboard SE', 'Nunito', system-ui, sans-serif;
