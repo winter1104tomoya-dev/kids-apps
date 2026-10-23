@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const SETS = {
   hiragana: [...'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん'],
+  katakana: [...'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'],
   alphabet: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
   lowercase: [...'abcdefghijklmnopqrstuvwxyz'],
   numbers: [...'0123456789'],
@@ -115,7 +116,7 @@ async function convert(ch) {
   const res = await fetch(`${SRC}${code}.svg`);
   if (!res.ok) throw new Error(`${ch} のデータを取得できませんでした (${res.status})`);
   const svg = await res.text();
-  const ds = [...svg.matchAll(/<path id="kvg:[0-9a-f]+-s\d+" d="([^"]+)"/g)].map((m) => m[1]);
+  const ds = [...svg.matchAll(/<path id="kvg:[0-9a-f]+-s\d+"[^>]*?\sd="([^"]+)"/g)].map((m) => m[1]);
   return { char: ch, strokes: ds.map((d) => resample(pathToDense(d))) };
 }
 

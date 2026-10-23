@@ -1,4 +1,5 @@
 import hiraganaData from './data/hiragana.json';
+import katakanaData from './data/katakana.json';
 import alphabetData from './data/alphabet.json';
 import lowercaseData from './data/lowercase.json';
 import numbersData from './data/numbers.json';
@@ -15,20 +16,25 @@ export interface CharData {
   color: string;
 }
 
-export type SetId = 'hiragana' | 'alphabet' | 'numbers';
+export type SetId = 'hiragana' | 'katakana' | 'alphabet' | 'numbers';
 
 type RawChar = { char: string; strokes: Pt[][] };
 
 const COLORS = ['#ff8a80', '#ffb74d', '#81c784', '#64b5f6', '#ba68c8'];
 
-// ひらがなは五十音表の行ごとに色分けする
+// ひらがな・カタカナは五十音表の行ごとに色分けする
 const GOJUON = [
   'あいうえお', 'かきくけこ', 'さしすせそ', 'たちつてと', 'なにぬねの',
   'はひふへほ', 'まみむめも', 'や ゆ よ', 'らりるれろ', 'わ   を', 'ん    ',
 ];
 const HIRAGANA_COLORS = [...COLORS, '#4db6ac', '#f06292', '#ffd54f', '#7986cb', '#a1887f', '#90a4ae'];
-function hiraganaColor(ch: string): string {
-  const row = GOJUON.findIndex((r) => r.includes(ch));
+/** カタカナをひらがなに直す（読み上げと色分けに使う） */
+function toHiragana(ch: string): string {
+  const code = ch.charCodeAt(0);
+  return code >= 0x30a1 && code <= 0x30f6 ? String.fromCharCode(code - 0x60) : ch;
+}
+function kanaColor(ch: string): string {
+  const row = GOJUON.findIndex((r) => r.includes(toHiragana(ch)));
   return HIRAGANA_COLORS[row % HIRAGANA_COLORS.length];
 }
 
@@ -61,7 +67,9 @@ function build(data: RawChar[], reading: (c: RawChar, i: number) => string, colo
   }));
 }
 
-const hiragana = build(hiraganaData as RawChar[], (c) => c.char, (c) => hiraganaColor(c.char));
+const hiragana = build(hiraganaData as RawChar[], (c) => c.char, (c) => kanaColor(c.char));
+// カタカナ1文字だと読み上げが不安定なことがあるので、ひらがなで読ませる
+const katakana = build(katakanaData as RawChar[], (c) => toHiragana(c.char), (c) => kanaColor(c.char));
 const upper = build(alphabetData as RawChar[], (_, i) => ALPHABET_READINGS[i], (_, i) => COLORS[i % COLORS.length]);
 const lower = build(lowercaseData as RawChar[], (_, i) => ALPHABET_READINGS[i], (_, i) => COLORS[i % COLORS.length]);
 // 数字は 1〜9、0 の順に並べる
@@ -71,16 +79,20 @@ numbers.push(numbers.shift()!);
 /** 文字えらびに並べる文字。lowercase が true ならアルファベットに小文字も加える */
 export function charList(set: SetId, lowercase: boolean): CharData[] {
   if (set === 'hiragana') return hiragana;
+  if (set === 'katakana') return katakana;
   if (set === 'numbers') return numbers;
   return lowercase ? [...upper, ...lower] : upper;
 }
 
 /**
- * 文字えらびの並び。ひらがなは五十音表の形にし、空きマスは null。
+ * 文字えらびの並び。ひらがな・カタカナは五十音表の形にし、空きマスは null。
  * columns は1行に並べる数
  */
 export function tileLayout(set: SetId, lowercase: boolean): { columns: number; cells: (CharData | null)[] } {
-  if (set !== 'hiragana') return { columns: set === 'numbers' ? 3 : 4, cells: charList(set, lowercase) };
-  const cells = GOJUON.flatMap((row) => [...row].map((ch) => hiragana.find((c) => c.char === ch) ?? null));
+  if (set !== 'hiragana' && set !== 'katakana') {
+    return { columns: set === 'numbers' ? 3 : 4, cells: charList(set, lowercase) };
+  }
+  const kana = charList(set, lowercase);
+  const cells = GOJUON.flatMap((row) => [...row].map((ch) => kana.find((c) => toHiragana(c.char) === ch) ?? null));
   return { columns: 5, cells };
 }
