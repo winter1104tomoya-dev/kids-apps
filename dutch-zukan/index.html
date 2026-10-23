@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#eef7ff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <title>タッチずかん</title>
+  </head>
+  <body>
+    <!-- ホーム：カテゴリをえらぶ -->
+    <section id="home" class="screen">
+      <button id="gear" class="corner right" aria-label="保護者メニュー（3秒長押し）">
+        <svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+        <span class="ring"></span>
+      </button>
+      <div id="cats" class="cats"></div>
+    </section>
+
+    <!-- 図鑑：絵をタッチすると読み上げる -->
+    <section id="book" class="screen" hidden>
+      <button class="corner left back" aria-label="もどる">
+        <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" /></svg>
+      </button>
+      <div id="title" class="title"></div>
+      <div id="cards" class="cards"></div>
+      <button id="banner" class="banner" hidden></button>
+    </section>
+
+    <!-- 保護者メニュー -->
+    <div id="parent" class="parent" hidden>
+      <div class="panel">
+        <h2>保護者メニュー</h2>
+        <div class="row">
+          <span>音量</span>
+          <div class="seg" data-key="volume">
+            <button data-v="0">なし</button><button data-v="1">小さめ</button><button data-v="2">ふつう</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>読む速さ</span>
+          <div class="seg" data-key="rate">
+            <button data-v="slow">ゆっくり</button><button data-v="normal">ふつう</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>冠詞（de / het）</span>
+          <div class="seg" data-key="article">
+            <button data-v="false">つけない</button><button data-v="true">つける</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>日本語も読む</span>
+          <div class="seg" data-key="japanese">
+            <button data-v="false">読まない</button><button data-v="true">読む</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>オランダ語の声</span>
+          <button id="test" class="plain">ためす</button>
+        </div>
+        <p id="voice" class="note"></p>
+        <button id="close" class="plain wide">とじる</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

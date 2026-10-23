@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#fff8ee" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <title>なぞりがき</title>
+  </head>
+  <body>
+    <!-- ホーム -->
+    <section id="home" class="screen">
+      <button id="gear" class="corner right" aria-label="保護者メニュー（3秒長押し）">
+        <svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+        <span class="ring"></span>
+      </button>
+      <div class="home-buttons">
+        <button class="big-set" data-set="hiragana" style="--c:#ff8a80">あ</button>
+        <button class="big-set" data-set="alphabet" style="--c:#64b5f6">A</button>
+      </div>
+    </section>
+
+    <!-- 文字えらび -->
+    <section id="select" class="screen" hidden>
+      <button class="corner left back" aria-label="もどる">
+        <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" /></svg>
+      </button>
+      <div id="tiles" class="tiles"></div>
+    </section>
+
+    <!-- なぞり書き -->
+    <section id="trace" class="screen" hidden>
+      <button class="corner left back" aria-label="もどる">
+        <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" /></svg>
+      </button>
+      <canvas id="board"></canvas>
+      <div id="finish" class="finish" hidden>
+        <button id="again" class="round-btn" style="--c:#ffb74d" aria-label="もういっかい">
+          <svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2-5" /><path d="M7 2v5h5" /></svg>
+        </button>
+        <button id="next" class="round-btn" style="--c:#81c784" aria-label="つぎのもじ">
+          <svg viewBox="0 0 24 24"><path d="M4 12h15M13 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- 保護者メニュー -->
+    <div id="parent" class="parent" hidden>
+      <div class="panel">
+        <h2>保護者メニュー</h2>
+        <div class="row">
+          <span>音量</span>
+          <div class="seg" data-key="volume">
+            <button data-v="0">なし</button><button data-v="1">小さめ</button><button data-v="2">ふつう</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>判定のゆるさ</span>
+          <div class="seg" data-key="level">
+            <button data-v="easy">やさしい</button><button data-v="normal">ふつう</button><button data-v="hard">しっかり</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>シール</span>
+          <button id="reset" class="plain">リセット</button>
+        </div>
+        <p class="credit">
+          ひらがなの書き順データ：<a href="https://kanjivg.tagaini.net/" target="_blank" rel="noopener">KanjiVG</a>
+          © Ulrich Apel（<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>）を加工して使用
+        </p>
+        <button id="close" class="plain wide">とじる</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
