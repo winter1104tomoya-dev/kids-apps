@@ -423,6 +423,12 @@ img.pic {
   border-color: var(--c);
   box-shadow: 0 7px 0 var(--c);
 }
+/* 読み上げ中は絵をすこしうすくして、まだ押せないことを見せる */
+.choices.listening .card {
+  opacity: 0.55;
+  transform: scale(0.96);
+  transition: opacity 0.2s, transform 0.2s;
+}
 .choices .card.right {
   border-color: #43a047;
   box-shadow: 0 7px 0 #2e7d32;
