@@ -49,6 +49,11 @@ function phrase(w: Word): string {
 }
 
 function picHtml(w: Word): string {
+  if (w.num) {
+    // 数字の下に同じ数の丸を並べて、量も一緒に見せる
+    const dots = '<i></i>'.repeat(w.num);
+    return `<span class="num"><b>${w.num}</b><span class="dots">${dots}</span></span>`;
+  }
   return w.color
     ? `<span class="swatch" style="--sw:${w.color}"></span>`
     : `<span class="pic">${w.pic}</span>`;
