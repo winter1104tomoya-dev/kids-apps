@@ -24,9 +24,33 @@
       <button class="corner left back" aria-label="もどる">
         <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" /></svg>
       </button>
+      <button id="quizBtn" class="corner right quiz-btn" aria-label="クイズ">?</button>
       <div id="title" class="title"></div>
       <div id="cards" class="cards"></div>
       <button id="banner" class="banner" hidden></button>
+    </section>
+
+    <!-- クイズ：読み上げた単語の絵をタッチする -->
+    <section id="quiz" class="screen" hidden>
+      <button class="corner left back" aria-label="もどる">
+        <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" /></svg>
+      </button>
+      <div id="stars" class="stars"></div>
+      <button id="speaker" class="speaker" aria-label="もういちど きく">
+        <svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" /><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" /></svg>
+      </button>
+      <div id="choices" class="choices"></div>
+      <div id="done" class="done" hidden>
+        <div class="big-stars"></div>
+        <div class="done-buttons">
+          <button id="again" class="round-btn" style="--c:#ffb74d" aria-label="もういっかい">
+            <svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2-5" /><path d="M7 2v5h5" /></svg>
+          </button>
+          <button id="toBook" class="round-btn" style="--c:#64b5f6" aria-label="ずかんにもどる">
+            <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" /></svg>
+          </button>
+        </div>
+      </div>
     </section>
 
     <!-- 保護者メニュー -->
@@ -55,6 +79,12 @@
           <span>日本語も読む</span>
           <div class="seg" data-key="japanese">
             <button data-v="false">読まない</button><button data-v="true">読む</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>クイズの絵の数</span>
+          <div class="seg" data-key="choices">
+            <button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button>
           </div>
         </div>
         <div class="row">

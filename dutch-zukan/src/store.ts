@@ -9,6 +9,8 @@ export interface Settings {
   article: boolean;
   /** オランダ語のあとに日本語も読む */
   japanese: boolean;
+  /** クイズで並べる絵の数 */
+  choices: 2 | 3 | 4;
 }
 
 const KEY_SETTINGS = 'zukan.settings';
@@ -27,6 +29,7 @@ export const settings: Settings = load<Settings>(KEY_SETTINGS, {
   rate: 'slow',
   article: false,
   japanese: false,
+  choices: 3,
 });
 
 export function saveSettings(): void {
