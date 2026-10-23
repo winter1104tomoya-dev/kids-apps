@@ -23,12 +23,28 @@ function utter(text: string, lang: 'nl' | 'ja'): SpeechSynthesisUtterance {
   return u;
 }
 
-/** オランダ語で読む。設定によっては続けて日本語も読む */
-export function speakNl(nl: string, ja?: string): void {
-  if (settings.volume === 0 || !('speechSynthesis' in window)) return;
+/** オランダ語で読む。設定によっては続けて日本語も読む。onEnd は読み終わったとき（読まないときはすぐ）に呼ぶ */
+export function speakNl(nl: string, ja?: string, onEnd?: () => void): void {
+  if (settings.volume === 0 || !('speechSynthesis' in window)) {
+    onEnd?.();
+    return;
+  }
   speechSynthesis.cancel();
-  speechSynthesis.speak(utter(nl, 'nl'));
-  if (ja && settings.japanese) speechSynthesis.speak(utter(ja, 'ja'));
+  const list = [utter(nl, 'nl')];
+  if (ja && settings.japanese) list.push(utter(ja, 'ja'));
+  if (onEnd) {
+    let called = false;
+    const done = () => {
+      if (!called) {
+        called = true;
+        onEnd();
+      }
+    };
+    const last = list[list.length - 1];
+    last.onend = done;
+    last.onerror = done;
+  }
+  for (const u of list) speechSynthesis.speak(u);
 }
 
 /** 保護者メニュー用：オランダ語の声が入っているか */

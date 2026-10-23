@@ -199,12 +199,14 @@ function nextQuestion(prev: Word | null): void {
   // 同じ問題が続かないようにする
   q.target = shuffle(words.filter((w) => w !== prev))[0];
   q.misses = 0;
-  q.locked = false;
+  // 最初の読み上げが終わるまでは絵をタッチできない（聞く前に押してしまわないように）
+  q.locked = true;
   const count = Math.min(settings.choices, words.length);
   const others = shuffle(words.filter((w) => w !== q.target)).slice(0, count - 1);
   const box = $('#choices');
   box.innerHTML = '';
   box.dataset.count = String(count);
+  box.classList.add('listening');
   choiceCards = [];
   for (const w of shuffle([q.target, ...others])) {
     const card = document.createElement('button');
@@ -215,13 +217,28 @@ function nextQuestion(prev: Word | null): void {
     box.append(card);
     choiceCards.push([card, w]);
   }
-  later(ask, 500);
+  later(() => ask(true), 500);
+}
+
+/** いちばん新しい読み上げの番号。聞き直しで前の読み上げが止まっても、そちらの合図では進めない */
+let askId = 0;
+
+/** 読み上げが終わった（または終わったことにする）ので、タッチを受け付ける */
+function unlock(q: QuizState, id: number): void {
+  if (quiz !== q || id !== askId) return;
+  q.locked = false;
+  $('#choices').classList.remove('listening');
 }
 
 /** 問題を読み上げる。スピーカーを押すともう一度 */
-function ask(): void {
-  if (!quiz) return;
-  speakNl(phrase(quiz.target));
+function ask(first = false): void {
+  const q = quiz;
+  if (!q) return;
+  const listening = first || $('#choices').classList.contains('listening');
+  const id = ++askId;
+  speakNl(phrase(q.target), undefined, listening ? () => unlock(q, id) : undefined);
+  // 読み終わりの合図が来ない端末でも先に進めるように、少し待ったら受け付ける
+  if (listening) window.setTimeout(() => unlock(q, id), 5000);
   const sp = $('#speaker');
   sp.classList.remove('talk');
   void sp.offsetWidth;
@@ -248,7 +265,7 @@ function answer(card: HTMLElement, w: Word): void {
   if (q.misses >= 2) {
     for (const [c, cw] of choiceCards) if (cw === q.target) c.classList.add('hint');
   }
-  later(ask, 700);
+  later(() => ask(), 700);
 }
 
 function finishQuiz(): void {
@@ -259,7 +276,7 @@ function finishQuiz(): void {
 }
 
 $('#quizBtn').addEventListener('click', () => show({ screen: 'quiz', cat: nav.cat }));
-$('#speaker').addEventListener('click', ask);
+$('#speaker').addEventListener('click', () => ask());
 $('#again').addEventListener('click', () => startQuiz(nav.cat!));
 $('#toBook').addEventListener('click', () => history.back());
 
