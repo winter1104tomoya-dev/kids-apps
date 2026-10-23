@@ -1,9 +1,9 @@
 import './style.css';
 import { CATEGORIES, type Shape, type Word } from './words';
-import { dutchVoiceName, speakNl, unlockAudio } from './sound';
+import { dutchVoiceName, playCorrect, playFanfare, playWrong, speakNl, unlockAudio } from './sound';
 import { saveSettings, settings } from './store';
 
-type ScreenId = 'home' | 'book';
+type ScreenId = 'home' | 'book' | 'quiz';
 interface NavState {
   screen: ScreenId;
   cat?: number;
@@ -27,8 +27,10 @@ let nav: NavState = { screen: 'home' };
 function show(state: NavState, push = true): void {
   nav = state;
   if (push) history.pushState(state, '');
-  for (const id of ['home', 'book'] as const) $(`#${id}`).hidden = id !== state.screen;
+  for (const id of ['home', 'book', 'quiz'] as const) $(`#${id}`).hidden = id !== state.screen;
+  stopQuiz();
   if (state.screen === 'book') renderBook(state.cat!);
+  if (state.screen === 'quiz') startQuiz(state.cat!);
 }
 
 history.replaceState(nav, '');
@@ -86,6 +88,7 @@ function renderBook(cat: number): void {
   const c = CATEGORIES[cat];
   $('#title').innerHTML = `${icon(c, 'head')} ${c.ja}`;
   $('#title').style.setProperty('--c', c.color);
+  $('#quizBtn').style.setProperty('--c', c.color);
   $('#banner').hidden = true;
   const box = $('#cards');
   box.innerHTML = '';
@@ -129,6 +132,137 @@ $('#banner').addEventListener('click', () => {
   bannerTimer = window.setTimeout(() => ($('#banner').hidden = true), 4000);
 });
 
+// ---- クイズ：オランダ語で読み上げた単語の絵をタッチする ----
+
+/** 1回のクイズの問題数 */
+const ROUNDS = 5;
+const STAR = '<svg viewBox="0 0 24 24"><path d="M12 1.8l3.1 6.4 7 .9-5.1 4.9 1.3 7-6.3-3.4-6.3 3.4 1.3-7L1.9 9.1l7-.9z"/></svg>';
+
+interface QuizState {
+  cat: number;
+  /** 正解した数 */
+  score: number;
+  target: Word;
+  /** この問題でまちがえた回数 */
+  misses: number;
+  /** 正解したあと、次の問題までタッチを受け付けない */
+  locked: boolean;
+}
+
+let quiz: QuizState | null = null;
+let quizTimer = 0;
+/** いま並んでいる絵と、その単語 */
+let choiceCards: [HTMLElement, Word][] = [];
+
+function shuffle<T>(list: T[]): T[] {
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function later(fn: () => void, ms: number): void {
+  clearTimeout(quizTimer);
+  quizTimer = window.setTimeout(fn, ms);
+}
+
+function stopQuiz(): void {
+  clearTimeout(quizTimer);
+  quiz = null;
+}
+
+function startQuiz(cat: number): void {
+  $('#done').hidden = true;
+  $('#quiz').style.setProperty('--c', CATEGORIES[cat].color);
+  quiz = { cat, score: 0, target: CATEGORIES[cat].words[0], misses: 0, locked: true };
+  renderStars();
+  nextQuestion(null);
+}
+
+function renderStars(): void {
+  const box = $('#stars');
+  box.innerHTML = '';
+  for (let i = 0; i < ROUNDS; i++) {
+    const s = document.createElement('span');
+    s.className = i < quiz!.score ? 'on' : '';
+    if (i === quiz!.score - 1) s.classList.add('new');
+    s.innerHTML = STAR;
+    box.append(s);
+  }
+}
+
+function nextQuestion(prev: Word | null): void {
+  const q = quiz!;
+  const words = CATEGORIES[q.cat].words;
+  // 同じ問題が続かないようにする
+  q.target = shuffle(words.filter((w) => w !== prev))[0];
+  q.misses = 0;
+  q.locked = false;
+  const count = Math.min(settings.choices, words.length);
+  const others = shuffle(words.filter((w) => w !== q.target)).slice(0, count - 1);
+  const box = $('#choices');
+  box.innerHTML = '';
+  box.dataset.count = String(count);
+  choiceCards = [];
+  for (const w of shuffle([q.target, ...others])) {
+    const card = document.createElement('button');
+    card.className = 'card';
+    card.setAttribute('aria-label', w.ja);
+    card.innerHTML = picHtml(w);
+    card.addEventListener('click', () => answer(card, w));
+    box.append(card);
+    choiceCards.push([card, w]);
+  }
+  later(ask, 500);
+}
+
+/** 問題を読み上げる。スピーカーを押すともう一度 */
+function ask(): void {
+  if (!quiz) return;
+  speakNl(phrase(quiz.target));
+  const sp = $('#speaker');
+  sp.classList.remove('talk');
+  void sp.offsetWidth;
+  sp.classList.add('talk');
+}
+
+function answer(card: HTMLElement, w: Word): void {
+  const q = quiz;
+  if (!q || q.locked) return;
+  if (w === q.target) {
+    q.locked = true;
+    card.classList.add('right');
+    playCorrect();
+    speakNl('Goed zo!');
+    q.score++;
+    renderStars();
+    later(q.score >= ROUNDS ? finishQuiz : () => nextQuestion(w), 1800);
+    return;
+  }
+  // まちがい：その絵をうすくして、もう一度問題を読む。2回まちがえたら正解の絵を光らせる
+  q.misses++;
+  card.classList.add('wrong');
+  playWrong();
+  if (q.misses >= 2) {
+    for (const [c, cw] of choiceCards) if (cw === q.target) c.classList.add('hint');
+  }
+  later(ask, 700);
+}
+
+function finishQuiz(): void {
+  $('.big-stars').innerHTML = STAR.repeat(ROUNDS);
+  $('#done').hidden = false;
+  playFanfare();
+  later(() => speakNl('Super!'), 600);
+}
+
+$('#quizBtn').addEventListener('click', () => show({ screen: 'quiz', cat: nav.cat }));
+$('#speaker').addEventListener('click', ask);
+$('#again').addEventListener('click', () => startQuiz(nav.cat!));
+$('#toBook').addEventListener('click', () => history.back());
+
 // ---- 保護者メニュー（右上の歯車を3秒長押し） ----
 
 const gear = $('#gear');
@@ -147,7 +281,7 @@ gear.addEventListener('pointerdown', (e) => {
 });
 ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => gear.addEventListener(ev, cancelHold));
 
-type SegKey = 'volume' | 'rate' | 'article' | 'japanese';
+type SegKey = 'volume' | 'rate' | 'article' | 'japanese' | 'choices';
 
 function syncSeg(): void {
   document.querySelectorAll<HTMLElement>('.seg').forEach((seg) => {
@@ -188,6 +322,9 @@ document.querySelectorAll<HTMLElement>('.seg').forEach((seg) =>
         break;
       case 'japanese':
         settings.japanese = v === 'true';
+        break;
+      case 'choices':
+        settings.choices = Number(v) as 2 | 3 | 4;
         break;
     }
     saveSettings();

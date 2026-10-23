@@ -332,6 +332,197 @@ img.pic {
   overflow-wrap: anywhere;
 }
 
+/* 図鑑の右上の「？」（クイズへ） */
+.quiz-btn {
+  background: var(--c, #ffb74d);
+  color: #fff;
+  font-size: 52px;
+  font-weight: bold;
+  line-height: 1;
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--c, #ffb74d) 70%, #000);
+}
+
+/* クイズ */
+#quiz {
+  justify-content: flex-start;
+}
+.stars {
+  height: 84px;
+  margin-top: calc(env(safe-area-inset-top) + 12px);
+  padding-left: 84px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.stars svg {
+  width: 40px;
+  height: 40px;
+  fill: #d5e0ea;
+}
+.stars .on svg {
+  fill: #ffca28;
+  stroke: #f9a825;
+  stroke-width: 1;
+}
+.stars .new svg {
+  animation: pop 0.5s ease-out;
+}
+@keyframes pop {
+  from {
+    transform: scale(0) rotate(-60deg);
+  }
+}
+.speaker {
+  width: 120px;
+  height: 120px;
+  margin: 12px 0 20px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--c) 70%, #000);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.speaker svg {
+  width: 68px;
+  height: 68px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.speaker svg path:first-child {
+  fill: #fff;
+}
+.speaker:active {
+  transform: translateY(6px);
+  box-shadow: none;
+}
+.speaker.talk {
+  animation: talk 0.6s ease-out;
+}
+@keyframes talk {
+  40% {
+    transform: scale(1.15);
+  }
+}
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  width: min(100%, 420px);
+}
+/* 3つのときは、3つ目を真ん中に */
+.choices .card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  width: calc(50% - 10px);
+  justify-self: center;
+}
+.choices .card {
+  border-color: var(--c);
+  box-shadow: 0 7px 0 var(--c);
+}
+.choices .card.right {
+  border-color: #43a047;
+  box-shadow: 0 7px 0 #2e7d32;
+  background: #e8f5e9;
+}
+.choices .card.right > * {
+  animation: boing 0.5s ease-out;
+}
+.choices .card.wrong {
+  opacity: 0.3;
+  pointer-events: none;
+  animation: shake 0.4s;
+}
+@keyframes shake {
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+.choices .card.hint {
+  animation: glow 1s ease-in-out infinite;
+}
+@keyframes glow {
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 8px #fff59d, 0 7px 0 var(--c);
+  }
+}
+
+/* 5問できたとき */
+.done {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  z-index: 3;
+}
+.done[hidden] {
+  display: none;
+}
+.big-stars {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 340px;
+}
+.big-stars svg {
+  width: 96px;
+  height: 96px;
+  fill: #ffca28;
+  stroke: #f9a825;
+  stroke-width: 1;
+  animation: pop 0.6s ease-out backwards;
+}
+.big-stars svg:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.big-stars svg:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.big-stars svg:nth-child(4) {
+  animation-delay: 0.45s;
+}
+.big-stars svg:nth-child(5) {
+  animation-delay: 0.6s;
+}
+.done-buttons {
+  display: flex;
+  gap: 48px;
+}
+.round-btn {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--c) 70%, #000);
+  display: grid;
+  place-items: center;
+}
+.round-btn:active {
+  transform: translateY(6px);
+  box-shadow: none;
+}
+.round-btn svg {
+  width: 60px;
+  height: 60px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* 保護者メニュー */
 .parent {
   position: fixed;
