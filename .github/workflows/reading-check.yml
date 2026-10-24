@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        branch: [zukan-voices-2, zukan-voices-3, zukan-voices-4]
+        branch: [zukan-voices-5, zukan-voices-6, zukan-voices-7]
     steps:
       - uses: actions/checkout@v4
         with:
