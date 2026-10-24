@@ -1,6 +1,17 @@
 import { settings } from './store';
+import voices from './voice/voices.json';
 
-// 読み上げはブラウザの音声合成（Web Speech API）を使う。音声ファイルは不要
+// 読み上げは、用意した音声ファイル（tools/make-voices.mjs で Google の読み上げから作ったもの）があればそれを使い、
+// なければブラウザの音声合成（Web Speech API）で読む
+
+type Lang = 'nl' | 'ja';
+const MANIFEST = voices as { voice: Partial<Record<Lang, string>> } & Record<Lang, Record<string, string>>;
+const FILES = import.meta.glob<string>('./voice/*/*.mp3', { eager: true, query: '?url', import: 'default' });
+
+function fileFor(text: string, lang: Lang): string | undefined {
+  const hash = MANIFEST[lang][text];
+  return hash && FILES[`./voice/${lang}/${hash}.mp3`];
+}
 
 /** 声の一覧は後から読み込まれることがあるので、毎回探し直す */
 function findVoice(prefix: 'nl' | 'ja'): SpeechSynthesisVoice | undefined {
@@ -23,28 +34,54 @@ function utter(text: string, lang: 'nl' | 'ja'): SpeechSynthesisUtterance {
   return u;
 }
 
+let playing: HTMLAudioElement | null = null;
+/** 読み上げの番号。新しく読み始めたら、前の読み上げの「終わった」合図は無視する */
+let speakId = 0;
+
+/** 1つの文を読む。ファイルがあれば再生、なければ音声合成。終わったら（失敗しても）next を呼ぶ */
+function speakOne(text: string, lang: Lang, next: () => void): void {
+  const url = fileFor(text, lang);
+  if (url) {
+    const a = new Audio(url);
+    a.playbackRate = settings.rate === 'slow' ? 0.8 : 1;
+    a.preservesPitch = true;
+    a.volume = settings.volume === 2 ? 1 : 0.5;
+    a.onended = next;
+    a.onerror = next;
+    playing = a;
+    a.play().catch(next);
+    return;
+  }
+  if (!('speechSynthesis' in window)) return next();
+  const u = utter(text, lang);
+  u.onend = next;
+  u.onerror = next;
+  speechSynthesis.speak(u);
+}
+
 /** オランダ語で読む。設定によっては続けて日本語も読む。onEnd は読み終わったとき（読まないときはすぐ）に呼ぶ */
 export function speakNl(nl: string, ja?: string, onEnd?: () => void): void {
-  if (settings.volume === 0 || !('speechSynthesis' in window)) {
+  const id = ++speakId;
+  playing?.pause();
+  playing = null;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (settings.volume === 0) {
     onEnd?.();
     return;
   }
-  speechSynthesis.cancel();
-  const list = [utter(nl, 'nl')];
-  if (ja && settings.japanese) list.push(utter(ja, 'ja'));
-  if (onEnd) {
-    let called = false;
-    const done = () => {
-      if (!called) {
-        called = true;
-        onEnd();
-      }
-    };
-    const last = list[list.length - 1];
-    last.onend = done;
-    last.onerror = done;
-  }
-  for (const u of list) speechSynthesis.speak(u);
+  const list: [string, Lang][] = [[nl, 'nl']];
+  if (ja && settings.japanese) list.push([ja, 'ja']);
+  const step = (i: number) => {
+    if (id !== speakId) return;
+    if (i >= list.length) return onEnd?.();
+    speakOne(list[i][0], list[i][1], () => step(i + 1));
+  };
+  step(0);
+}
+
+/** 保護者メニュー用：音声ファイルの声の名前（ファイルがなければ null） */
+export function recordedVoiceName(): string | null {
+  return Object.keys(MANIFEST.nl).length ? (MANIFEST.voice.nl ?? '') : null;
 }
 
 /** 保護者メニュー用：オランダ語の声が入っているか */
