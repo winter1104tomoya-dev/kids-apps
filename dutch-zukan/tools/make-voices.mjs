@@ -19,21 +19,24 @@ if (!KEY) {
 // 使いたい声の順番。上から、使えるものを選ぶ（女性のやわらかい声を優先）
 const PREFER = {
   nl: ['nl-NL-Chirp3-HD-Aoede', 'nl-NL-Chirp3-HD-Leda', 'nl-NL-Wavenet-F', 'nl-NL-Wavenet-D', 'nl-NL-Wavenet-A', 'nl-NL-Standard-A'],
-  ja: ['ja-JP-Chirp3-HD-Aoede', 'ja-JP-Chirp3-HD-Leda', 'ja-JP-Neural2-B', 'ja-JP-Wavenet-A', 'ja-JP-Wavenet-B', 'ja-JP-Standard-A'],
+  ja: ['ja-JP-Neural2-B', 'ja-JP-Wavenet-A', 'ja-JP-Chirp3-HD-Aoede', 'ja-JP-Wavenet-B', 'ja-JP-Standard-A'],
 };
 const LANG = { nl: 'nl-NL', ja: 'ja-JP' };
+// 声を指定して作るとき（ワークフローの入力から）
+if (process.env.NL_VOICE) PREFER.nl.unshift(process.env.NL_VOICE);
+if (process.env.JA_VOICE) PREFER.ja.unshift(process.env.JA_VOICE);
 
 const { CATEGORIES } = await import(join(ROOT, 'src/words.ts'));
 
 // アプリが読み上げる文をすべて集める（main.ts の speakNl の呼び出しと合わせる）
-const texts = { nl: new Set(['Goed zo!', 'Super!', 'aardbei', 'de aardbei']), ja: new Set(['いちご']) };
+const texts = { nl: new Set(['Goed zo!', 'Super!', 'aardbei', 'de aardbei']), ja: new Set(['苺']) };
 for (const c of CATEGORIES) {
   texts.nl.add(c.nl);
-  texts.ja.add(c.ja);
+  texts.ja.add(c.say ?? c.ja);
   for (const w of c.words) {
     texts.nl.add(w.nl);
     if (w.art) texts.nl.add(`${w.art} ${w.nl}`);
-    texts.ja.add(w.ja);
+    texts.ja.add(w.say ?? w.ja);
   }
 }
 
