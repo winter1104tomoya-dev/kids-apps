@@ -46,7 +46,7 @@ CATEGORIES.forEach((c, i) => {
   b.style.setProperty('--c', c.color);
   b.innerHTML = `${icon(c)}<span class="name">${c.ja}</span>`;
   b.addEventListener('click', () => {
-    speakNl(c.nl, c.ja);
+    speakNl(c.nl, c.say ?? c.ja);
     show({ screen: 'book', cat: i });
   });
   $('#cats').append(b);
@@ -108,7 +108,7 @@ let bannerTimer = 0;
 let current: Word | null = null;
 
 function say(card: HTMLElement, w: Word): void {
-  speakNl(phrase(w), w.ja);
+  speakNl(phrase(w), w.say ?? w.ja);
   // 絵をぴょんと跳ねさせる（連打しても毎回動くようにアニメを付け直す）
   card.classList.remove('boing');
   void card.offsetWidth;
@@ -127,7 +127,7 @@ function say(card: HTMLElement, w: Word): void {
 
 $('#banner').addEventListener('click', () => {
   if (!current) return;
-  speakNl(phrase(current), current.ja);
+  speakNl(phrase(current), current.say ?? current.ja);
   clearTimeout(bannerTimer);
   bannerTimer = window.setTimeout(() => ($('#banner').hidden = true), 4000);
 });
@@ -355,7 +355,7 @@ document.querySelectorAll<HTMLElement>('.seg').forEach((seg) =>
 );
 
 $('#test').addEventListener('click', () => {
-  speakNl(settings.article ? 'de aardbei' : 'aardbei', 'いちご');
+  speakNl(settings.article ? 'de aardbei' : 'aardbei', '苺');
   syncVoice();
 });
 $('#close').addEventListener('click', () => ($('#parent').hidden = true));

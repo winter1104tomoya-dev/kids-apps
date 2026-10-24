@@ -9,6 +9,14 @@ on:
         description: 'すべて作り直す'
         type: boolean
         default: false
+      ja_voice:
+        description: '日本語の声（空なら自動。例: ja-JP-Neural2-B）'
+        type: string
+        default: ''
+      nl_voice:
+        description: 'オランダ語の声（空なら自動）'
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -25,6 +33,8 @@ jobs:
         working-directory: dutch-zukan
         env:
           GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          JA_VOICE: ${{ inputs.ja_voice }}
+          NL_VOICE: ${{ inputs.nl_voice }}
         run: node --experimental-strip-types tools/make-voices.mjs ${{ inputs.force && '--force' || '' }}
       - name: Push to a branch
         run: |
