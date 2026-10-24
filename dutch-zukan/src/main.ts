@@ -1,6 +1,6 @@
 import './style.css';
 import { CATEGORIES, type Shape, type Word } from './words';
-import { dutchVoiceName, playCorrect, playFanfare, playWrong, speakNl, unlockAudio } from './sound';
+import { dutchVoiceName, playCorrect, playFanfare, playWrong, recordedVoiceName, speakNl, unlockAudio } from './sound';
 import { saveSettings, settings } from './store';
 
 type ScreenId = 'home' | 'book' | 'quiz';
@@ -310,6 +310,11 @@ function syncSeg(): void {
 }
 
 function syncVoice(): void {
+  const recorded = recordedVoiceName();
+  if (recorded !== null) {
+    $('#voice').textContent = `用意した音声ファイルで読みます（${recorded || 'Google の読み上げ'}）。ネットがなくても同じ声です。`;
+    return;
+  }
   const name = dutchVoiceName();
   $('#voice').textContent = name
     ? `オランダ語の声が使えます（${name}）。`

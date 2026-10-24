@@ -1,0 +1,42 @@
+# タッチずかんの音声ファイルを Google の読み上げで作り、ブランチに入れる（手動で実行）。
+# リポジトリの Secrets に GOOGLE_TTS_API_KEY が必要。終わったら、できたブランチから PR を作る。
+name: voices
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'すべて作り直す'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Make voices
+        working-directory: dutch-zukan
+        env:
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+        run: node --experimental-strip-types tools/make-voices.mjs ${{ inputs.force && '--force' || '' }}
+      - name: Push to a branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dutch-zukan/src/voice
+          if git diff --cached --quiet; then
+            echo '変更なし'
+            exit 0
+          fi
+          branch="zukan-voices-${{ github.run_number }}"
+          git checkout -b "$branch"
+          git commit -m 'タッチずかんの音声ファイルを作成'
+          git push origin "$branch"
+          echo "ブランチ $branch に入れました" >> "$GITHUB_STEP_SUMMARY"
