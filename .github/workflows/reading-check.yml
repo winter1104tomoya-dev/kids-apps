@@ -1,0 +1,21 @@
+# 一時的：音声ファイルの読み方を文字起こしで確認する
+name: reading-check
+on:
+  push:
+    branches: [zukan-reading-check]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [zukan-voices-2, zukan-voices-3, zukan-voices-4]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+      - uses: actions/checkout@v4
+        with:
+          path: tool
+      - run: pip install -q faster-whisper pykakasi
+      - run: python tool/check.py dutch-zukan/src/voice | tee -a "$GITHUB_STEP_SUMMARY"
