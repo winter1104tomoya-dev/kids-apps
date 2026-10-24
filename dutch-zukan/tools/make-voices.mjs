@@ -19,7 +19,7 @@ if (!KEY) {
 // 使いたい声の順番。上から、使えるものを選ぶ（女性のやわらかい声を優先）
 const PREFER = {
   nl: ['nl-NL-Chirp3-HD-Aoede', 'nl-NL-Chirp3-HD-Leda', 'nl-NL-Wavenet-F', 'nl-NL-Wavenet-D', 'nl-NL-Wavenet-A', 'nl-NL-Standard-A'],
-  ja: ['ja-JP-Chirp3-HD-Aoede', 'ja-JP-Chirp3-HD-Leda', 'ja-JP-Neural2-B', 'ja-JP-Wavenet-A', 'ja-JP-Wavenet-B', 'ja-JP-Standard-A'],
+  ja: ['ja-JP-Neural2-B', 'ja-JP-Wavenet-A', 'ja-JP-Chirp3-HD-Aoede', 'ja-JP-Wavenet-B', 'ja-JP-Standard-A'],
 };
 const LANG = { nl: 'nl-NL', ja: 'ja-JP' };
 // 声を指定して作るとき（ワークフローの入力から）
