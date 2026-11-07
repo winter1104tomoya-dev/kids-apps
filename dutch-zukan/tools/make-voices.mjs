@@ -26,6 +26,9 @@ const LANG = { nl: 'nl-NL', ja: 'ja-JP' };
 if (process.env.NL_VOICE) PREFER.nl.unshift(process.env.NL_VOICE);
 if (process.env.JA_VOICE) PREFER.ja.unshift(process.env.JA_VOICE);
 
+// 短すぎて一瞬で終わってしまうことばは、読ませ方を変える（アプリに出る文字はそのまま）
+const SPOKEN = { nl: { doei: 'Doei.' }, ja: {} };
+
 const { CATEGORIES } = await import(join(ROOT, 'src/words.ts'));
 
 // アプリが読み上げる文をすべて集める（main.ts の speakNl の呼び出しと合わせる）
@@ -62,11 +65,12 @@ for (const lang of ['nl', 'ja']) {
   manifest.voice[lang] = name;
   mkdirSync(join(OUT, lang), { recursive: true });
   for (const text of [...texts[lang]].sort()) {
-    const hash = createHash('sha1').update(text).digest('hex').slice(0, 12);
+    const spoken = SPOKEN[lang][text] ?? text;
+    const hash = createHash('sha1').update(spoken).digest('hex').slice(0, 12);
     const file = join(OUT, lang, `${hash}.mp3`);
     if (redo || !existsSync(file)) {
       const r = await api('text:synthesize', {
-        input: { text },
+        input: { text: spoken },
         voice: { languageCode: LANG[lang], name },
         audioConfig: { audioEncoding: 'MP3', sampleRateHertz: 24000 },
       });
