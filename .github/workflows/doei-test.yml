@@ -1,0 +1,25 @@
+# 一時的：doei の読み方の候補を作る
+name: doei-test
+on:
+  push:
+    branches: [zukan-doei-test]
+permissions:
+  contents: write
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          K: ${{ secrets.GOOGLE_TTS_API_KEY }}
+        run: |
+          mkdir -p out; i=0
+          for t in 'doei' 'doei!' 'Doei!' 'Doei.' 'Doei doei!' 'Dag!'; do
+            i=$((i+1))
+            curl -sf "https://texttospeech.googleapis.com/v1/text:synthesize?key=$K" -H 'Content-Type: application/json' \
+              -d "{\"input\":{\"text\":\"$t\"},\"voice\":{\"languageCode\":\"nl-NL\",\"name\":\"nl-NL-Chirp3-HD-Aoede\"},\"audioConfig\":{\"audioEncoding\":\"MP3\",\"sampleRateHertz\":24000}}" \
+              | jq -r .audioContent | base64 -d > "out/$i.mp3"
+            echo "$i $t" >> out/list.txt
+          done
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add out && git commit -qm out && git push -q origin HEAD:zukan-doei-out
