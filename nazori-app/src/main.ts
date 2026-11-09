@@ -1,7 +1,17 @@
 import './style.css';
 import { charList, tileLayout, type CharData, type SetId } from './chars';
-import { speak, unlockAudio } from './sound';
-import { addSticker, resetStickers, saveSettings, settings, stickerCount } from './store';
+import { playLevelUp, speak, unlockAudio } from './sound';
+import {
+  addSticker,
+  clearStage,
+  clearedStages,
+  resetStickers,
+  saveSettings,
+  settings,
+  stageFor,
+  stickerCount,
+  type Stage,
+} from './store';
 import { Tracer } from './trace';
 
 type ScreenId = 'home' | 'select' | 'trace';
@@ -16,11 +26,49 @@ const $ = <T extends HTMLElement>(sel: string) => document.querySelector(sel) as
 const STICKER_SVG =
   '<svg class="sticker" viewBox="0 0 24 24"><path d="M12 1.8l3.1 6.4 7 .9-5.1 4.9 1.3 7-6.3-3.4-6.3 3.4 1.3-7L1.9 9.1l7-.9z" fill="#ffd54f" stroke="#f9a825" stroke-width="1.2" stroke-linejoin="round"/></svg>';
 
-const tracer = new Tracer($<HTMLCanvasElement>('#board'), () => {
-  addSticker(currentChar().char);
-  speak('よくできました');
+const PRAISE = ['じょうず！', 'すごいね！', 'かっこいい！', 'ぴったり！', 'やったね！', 'はなまる！', 'よくできました！'];
+let lastPraise = '';
+function praise(): string {
+  const pool = PRAISE.filter((p) => p !== lastPraise);
+  lastPraise = pool[Math.floor(Math.random() * pool.length)];
+  return lastPraise;
+}
+
+/** 段階が上がったときに言うこと（上がった先の段階ごと） */
+const LEVEL_UP_TALK = ['', '', 'つぎは てんせんで かいてみよう', 'つぎは てんだけで かけるかな', 'つぎは じぶんで かいてみよう', 'じぶんで かけたね！ すごい！'];
+
+let traceStage: Stage = 1;
+
+const tracer = new Tracer($<HTMLCanvasElement>('#board'), (clean) => {
+  const ch = currentChar().char;
+  addSticker(ch);
+  const up = clean && clearStage(ch, traceStage);
+  if (up) {
+    const next = clearedStages(ch) + 1;
+    playLevelUp();
+    speak(`${praise()} ${LEVEL_UP_TALK[next]}`);
+    renderStageBar(ch, true);
+  } else {
+    speak(praise());
+  }
   $('#finish').hidden = false;
 });
+
+/** なぞり画面の上の、4つの段階の丸 */
+function renderStageBar(ch: string, celebrate = false): void {
+  const bar = $('#stage');
+  bar.hidden = settings.guide !== 'auto';
+  const cleared = clearedStages(ch);
+  bar.innerHTML = '';
+  for (let i = 1; i <= 4; i++) {
+    const pip = document.createElement('span');
+    pip.className = 'pip';
+    if (i <= cleared) pip.classList.add('done');
+    if (i === traceStage) pip.classList.add('now');
+    if (celebrate && i === cleared) pip.classList.add('new');
+    bar.append(pip);
+  }
+}
 
 let nav: NavState = { screen: 'home' };
 
@@ -73,6 +121,13 @@ function renderTiles(set: SetId): void {
     tile.style.setProperty('--c', c.color);
     tile.textContent = c.char;
     if (stickerCount(c.char) > 0) tile.insertAdjacentHTML('beforeend', STICKER_SVG);
+    const cleared = clearedStages(c.char);
+    if (settings.guide === 'auto' && cleared > 0) {
+      const dots = document.createElement('span');
+      dots.className = 'tile-stage';
+      dots.innerHTML = '<i></i>'.repeat(cleared) + '<i class="off"></i>'.repeat(4 - cleared);
+      tile.append(dots);
+    }
     tile.addEventListener('click', () => {
       speak(c.reading);
       show({ screen: 'trace', set, index: i });
@@ -85,7 +140,10 @@ function renderTiles(set: SetId): void {
 
 function startTrace(set: SetId, index: number): void {
   $('#finish').hidden = true;
-  tracer.start(list(set)[index]);
+  const c = list(set)[index];
+  traceStage = stageFor(c.char);
+  renderStageBar(c.char);
+  tracer.start(c, traceStage);
 }
 
 $('#again').addEventListener('click', () => {
@@ -123,7 +181,7 @@ gear.addEventListener('pointerdown', (e) => {
 
 function syncSeg(): void {
   document.querySelectorAll<HTMLElement>('.seg').forEach((seg) => {
-    const key = seg.dataset.key as 'volume' | 'level' | 'lowercase';
+    const key = seg.dataset.key as 'volume' | 'level' | 'lowercase' | 'guide';
     seg.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
       b.classList.toggle('on', String(settings[key]) === b.dataset.v);
     });
@@ -141,6 +199,7 @@ document.querySelectorAll<HTMLElement>('.seg').forEach((seg) =>
     if (!b) return;
     if (seg.dataset.key === 'volume') settings.volume = Number(b.dataset.v) as 0 | 1 | 2;
     else if (seg.dataset.key === 'lowercase') settings.lowercase = b.dataset.v === 'true';
+    else if (seg.dataset.key === 'guide') settings.guide = b.dataset.v as typeof settings.guide;
     else settings.level = b.dataset.v as typeof settings.level;
     saveSettings();
     syncSeg();
@@ -148,7 +207,7 @@ document.querySelectorAll<HTMLElement>('.seg').forEach((seg) =>
 );
 
 $('#reset').addEventListener('click', () => {
-  if (confirm('シールをすべて消しますか？')) resetStickers();
+  if (confirm('シールと、お手本の段階をすべて消しますか？')) resetStickers();
 });
 $('#close').addEventListener('click', () => ($('#parent').hidden = true));
 

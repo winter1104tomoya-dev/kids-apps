@@ -295,3 +295,77 @@ button {
 .credit a {
   color: inherit;
 }
+
+/* お手本の段階（なぞり画面の上の丸） */
+.stage-bar {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 40px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  pointer-events: none;
+}
+.stage-bar[hidden] {
+  display: none;
+}
+.stage-bar .pip {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #eee6dc;
+  border: 3px solid #e3dcd2;
+}
+.stage-bar .pip.done {
+  background: #ffd54f;
+  border-color: #f9a825;
+}
+.stage-bar .pip.now {
+  border-color: #4caf50;
+  transform: scale(1.25);
+}
+.stage-bar .pip.new {
+  animation: levelup 0.9s ease-out;
+}
+@keyframes levelup {
+  0% {
+    transform: scale(0.2);
+  }
+  50% {
+    transform: scale(2);
+  }
+  100% {
+    transform: scale(1.25);
+  }
+}
+
+/* 文字えらびのタイルの、できた段階の点 */
+.tile-stage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+}
+.tile-stage i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f9a825;
+}
+.tile-stage i.off {
+  background: #e3dcd2;
+}
+.seg.small button {
+  padding: 10px 8px;
+  font-size: 14px;
+}
+.note {
+  margin: -8px 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #8a7a70;
+}

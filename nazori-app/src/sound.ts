@@ -36,15 +36,17 @@ function tone(freq: number, start: number, dur: number, type: OscillatorType = '
   osc.stop(t0 + dur + 0.05);
 }
 
-/** 1画できたときの「ポン」 */
-export function playPon(): void {
+/** 1画できたときの「ポン」。画が進むごとにドレミと音が上がる */
+export function playPon(step = 0): void {
   const a = audio();
   if (!a) return;
   const t0 = a.currentTime;
   const osc = a.createOscillator();
   const g = a.createGain();
-  osc.frequency.setValueAtTime(880, t0);
-  osc.frequency.exponentialRampToValueAtTime(1320, t0 + 0.08);
+  const SCALE = [0, 2, 4, 5, 7, 9, 11, 12];
+  const base = 660 * Math.pow(2, SCALE[Math.min(step, SCALE.length - 1)] / 12);
+  osc.frequency.setValueAtTime(base, t0);
+  osc.frequency.exponentialRampToValueAtTime(base * 1.5, t0 + 0.08);
   g.gain.setValueAtTime(gainLevel(), t0);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.25);
   osc.connect(g).connect(a.destination);
@@ -102,4 +104,9 @@ export function speak(text: string): void {
 export function unlockAudio(): void {
   audio();
   if ('speechSynthesis' in window) speechSynthesis.getVoices();
+}
+
+/** 段階が上がったときの、きらきらした上り音 */
+export function playLevelUp(): void {
+  [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, i * 0.09, 0.35, 'sine', 0.7));
 }

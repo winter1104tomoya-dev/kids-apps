@@ -37,6 +37,7 @@
       <button class="corner left back" aria-label="もどる">
         <svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" /></svg>
       </button>
+      <div id="stage" class="stage-bar" aria-hidden="true"></div>
       <canvas id="board"></canvas>
       <div id="finish" class="finish" hidden>
         <button id="again" class="round-btn" style="--c:#ffb74d" aria-label="もういっかい">
@@ -70,6 +71,13 @@
             <button data-v="false">出さない</button><button data-v="true">出す</button>
           </div>
         </div>
+        <div class="row">
+          <span>お手本</span>
+          <div class="seg small" data-key="guide">
+            <button data-v="auto">じどう</button><button data-v="1">なぞる</button><button data-v="2">てんせん</button><button data-v="3">てん</button><button data-v="4">なし</button>
+          </div>
+        </div>
+        <p class="note">「じどう」は、文字ごとに助けなしで書けたら、なぞる→てんせん→てん→なしと進みます。</p>
         <div class="row">
           <span>シール</span>
           <button id="reset" class="plain">リセット</button>
