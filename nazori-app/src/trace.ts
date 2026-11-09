@@ -1,7 +1,7 @@
 import type { CharData, Pt } from './chars';
 import { StrokePath } from './geometry';
 import { playBoing, playFanfare, playPon } from './sound';
-import { LEVELS, settings } from './store';
+import { LEVELS, settings, type Stage } from './store';
 
 type State = 'demo' | 'ready' | 'drawing' | 'done';
 
@@ -23,13 +23,25 @@ interface Particle {
   rot: number;
 }
 
-/** なぞり書き画面のキャンバス。お手本表示、書き順アニメ、判定、花丸を受け持つ */
+/** 段階ごとの、ずれの許容の倍率。お手本が見えないほどゆるくする */
+const STAGE_TOL = [0, 1, 1.1, 1.3, 1.6];
+
+/**
+ * なぞり書き画面のキャンバス。お手本表示、書き順アニメ、判定、花丸を受け持つ。
+ * 段階（stage）でお手本の見え方が変わる：1 太い線 / 2 てんせん / 3 はじまりの点だけ / 4 なし
+ */
 export class Tracer {
   private canvas: HTMLCanvasElement;
   private g: CanvasRenderingContext2D;
-  private onComplete: () => void;
+  private onComplete: (clean: boolean) => void;
 
   private char!: CharData;
+  private stage: Stage = 1;
+  /** 書けた画の、子どもの指の跡（段階2以上で残す）。null はお手本で代わりに描く */
+  private inks: (Pt[] | null)[] = [];
+  /** 一度でもお手本のやり直しが出たら true（段階は上がらない） */
+  private helped = false;
+  private hintAt = -1e9;
   private paths: StrokePath[] = [];
   private state: State = 'demo';
   private current = 0; // 今なぞる画
@@ -52,7 +64,7 @@ export class Tracer {
   private ox = 0;
   private oy = 0;
 
-  constructor(canvas: HTMLCanvasElement, onComplete: () => void) {
+  constructor(canvas: HTMLCanvasElement, onComplete: (clean: boolean) => void) {
     this.canvas = canvas;
     this.g = canvas.getContext('2d')!;
     this.onComplete = onComplete;
@@ -63,8 +75,12 @@ export class Tracer {
     new ResizeObserver(() => this.resize()).observe(canvas);
   }
 
-  start(char: CharData): void {
+  start(char: CharData, stage: Stage = 1): void {
     this.char = char;
+    this.stage = stage;
+    this.inks = [];
+    this.helped = false;
+    this.hintAt = -1e9;
     this.paths = char.strokes.map((s) => new StrokePath(s));
     this.current = 0;
     this.fails = 0;
@@ -93,16 +109,22 @@ export class Tracer {
     return [(e.clientX - r.left - this.ox) / this.scale, (e.clientY - r.top - this.oy) / this.scale];
   }
 
+  private tol(): number {
+    return LEVELS[settings.level].tol * STAGE_TOL[this.stage];
+  }
+
   private down(e: PointerEvent): void {
     e.preventDefault();
     if (this.pointerId !== null || this.state !== 'ready') return;
     const p = this.toGrid(e);
     const path = this.paths[this.current];
-    const tol = LEVELS[settings.level].tol;
+    const tol = this.tol();
     const [sx, sy] = path.start;
     if (Math.hypot(p[0] - sx, p[1] - sy) > tol) {
       // 始点から遠い：始点の丸を跳ねさせて知らせる
       this.bounceAt = performance.now();
+      // 点が見えない段階では、はじまりの点をしばらく見せて教える
+      this.hintAt = this.bounceAt;
       playBoing();
       return;
     }
@@ -133,7 +155,7 @@ export class Tracer {
 
   private feed(p: Pt): void {
     const path = this.paths[this.current];
-    const tol = LEVELS[settings.level].tol;
+    const tol = this.tol();
     const { s, dist } = path.project(p, this.progress - 3, this.progress + LOOKAHEAD);
     this.dists.push(dist);
     // 線から大きく外れているあいだは進めない（進み具合は前にしか進まない）
@@ -145,7 +167,7 @@ export class Tracer {
     this.pointerId = null;
     if (this.state !== 'drawing') return;
     const path = this.paths[this.current];
-    const lv = LEVELS[settings.level];
+    const lv = { pass: LEVELS[settings.level].pass, tol: this.tol() };
     const ratio = this.progress / path.length;
     const mean = this.dists.reduce((a, b) => a + b, 0) / Math.max(1, this.dists.length);
     const moved = this.trail ? trailLength(this.trail.pts) : 0;
@@ -165,8 +187,10 @@ export class Tracer {
     this.fadeTrail();
     if (this.fails >= 3) {
       // 嫌にならないよう、3回目は合格扱い
+      this.helped = true;
       this.passStroke();
     } else if (this.fails === 2) {
+      this.helped = true;
       this.playDemo([this.current]);
     } else {
       this.state = 'ready';
@@ -183,7 +207,8 @@ export class Tracer {
   }
 
   private passStroke(): void {
-    playPon();
+    playPon(this.current);
+    this.inks[this.current] = this.trail && this.trail.pts.length > 1 ? this.trail.pts : null;
     this.trail = null;
     this.progress = 0;
     this.fails = 0;
@@ -193,7 +218,8 @@ export class Tracer {
       this.doneAt = performance.now();
       this.spawnConfetti();
       playFanfare();
-      setTimeout(() => this.onComplete(), 1600);
+      const clean = !this.helped;
+      setTimeout(() => this.onComplete(clean), 1600);
     } else {
       this.state = 'ready';
     }
@@ -246,24 +272,47 @@ export class Tracer {
     const color = this.char.color;
     const demo = this.state === 'demo' ? this.demoProgress(now) : null;
 
+    const stage = this.stage;
+    // 書き順アニメ中と、書き終えたあとは、どの段階でも文字の形を見せる
+    const showShape = stage === 1 || !!demo || this.state === 'done';
+    const INK_W = 8;
+
     this.paths.forEach((path, i) => {
+      const inked = stage >= 2 && i < this.current && this.inks[i];
       let doneLen = 0;
-      if (i < this.current) doneLen = path.length;
-      else if (i === this.current && this.state === 'drawing') doneLen = this.progress;
+      if (i < this.current && !inked) doneLen = path.length;
+      else if (i === this.current && this.state === 'drawing' && stage === 1) doneLen = this.progress;
       if (demo && demo.index === i) doneLen = Math.max(doneLen, demo.len);
       else if (demo && demo.finished.includes(i) && i >= this.current) doneLen = path.length;
 
-      // お手本（薄い色）
-      strokePath(g, path.pts, '#ddd6cc', LINE_W);
+      // お手本：段階1と書き順アニメは太い薄色、段階2はてんせん
+      if (showShape) strokePath(g, path.pts, '#ddd6cc', stage === 1 ? LINE_W : INK_W);
+      else if (stage === 2) {
+        g.setLineDash([2.2, 3.2]);
+        strokePath(g, path.pts, '#bfb3a5', 1.8);
+        g.setLineDash([]);
+      }
       // 進んだところまで色で塗る
-      if (doneLen > 0) strokePart(g, path, doneLen, color, LINE_W);
+      if (doneLen > 0) strokePart(g, path, doneLen, color, stage === 1 ? LINE_W : INK_W);
     });
+
+    // 段階2以上：子どもが書いた線をそのまま残す
+    if (stage >= 2) {
+      this.inks.forEach((pts, i) => {
+        if (pts && i < this.current) strokePath(g, pts, color, INK_W);
+      });
+    }
 
     // 今の画：書く向きの矢印と始点の丸
     if (this.state === 'ready' || this.state === 'drawing') {
       const path = this.paths[this.current];
-      if (this.state === 'ready') this.drawChevrons(path, now);
-      this.drawStartDot(path, now);
+      if (stage === 1) {
+        if (this.state === 'ready') this.drawChevrons(path, now);
+        this.drawStartDot(path, now);
+      } else if (stage <= 3 || now - this.hintAt < 1500) {
+        if (this.state === 'ready') this.drawStartArrow(path, now);
+        this.drawStartDot(path, now);
+      }
     }
 
     // 指の跡
@@ -272,7 +321,10 @@ export class Tracer {
       if (a > 0) strokePath(g, t.pts, `rgba(90,70,60,${0.35 * a})`, 4);
     }
     this.fading = this.fading.filter((t) => now - (t.fadeFrom ?? now) < 500);
-    if (this.trail) strokePath(g, this.trail.pts, 'rgba(90,70,60,0.35)', 4);
+    if (this.trail) {
+      if (stage === 1) strokePath(g, this.trail.pts, 'rgba(90,70,60,0.35)', 4);
+      else strokePath(g, this.trail.pts, color, INK_W);
+    }
 
     // 書き順アニメの指先
     if (demo && demo.index >= 0) {
@@ -324,6 +376,24 @@ export class Tracer {
       g.lineTo(x - dx * 2.2 - nx * 2.6, y - dy * 2.2 - ny * 2.6);
       g.stroke();
     }
+  }
+
+  /** 始点のそばに、書く向きを示す小さな矢印を1つだけ出す */
+  private drawStartArrow(path: StrokePath, now: number): void {
+    if (path.length < 16) return;
+    const g = this.g;
+    const s = 13 + 1.5 * Math.sin(now / 250);
+    const [x, y] = path.pointAt(s);
+    const [dx, dy] = path.directionAt(s);
+    const nx = -dy;
+    const ny = dx;
+    g.strokeStyle = '#4caf50';
+    g.lineWidth = 2.2;
+    g.beginPath();
+    g.moveTo(x - dx * 2.8 + nx * 3.2, y - dy * 2.8 + ny * 3.2);
+    g.lineTo(x + dx * 1.4, y + dy * 1.4);
+    g.lineTo(x - dx * 2.8 - nx * 3.2, y - dy * 2.8 - ny * 3.2);
+    g.stroke();
   }
 
   private drawStartDot(path: StrokePath, now: number): void {
